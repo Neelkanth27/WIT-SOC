@@ -16,3 +16,6 @@ ai_model/dataset/*.csv
 
 # Streamlit temporary state
 .streamlit/
+
+*.db
+soc_audit.db
