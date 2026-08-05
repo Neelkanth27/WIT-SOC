@@ -1,0 +1,16 @@
+# Web Framework & API
+fastapi
+uvicorn
+requests
+
+# Machine Learning & Data Processing
+pandas
+numpy
+scikit-learn
+joblib
+
+# Analyst Dashboard
+streamlit
+
+# System Utilities
+RPi.GPIO; platform_machine == 'aarch64' or platform_machine == 'armv7l'

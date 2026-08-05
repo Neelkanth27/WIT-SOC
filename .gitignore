@@ -1,0 +1,18 @@
+# Python environment and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# IDE settings
+.vscode/
+.idea/
+
+# Large dataset raw files (keeps model file, ignores raw CSVs)
+ai_model/dataset/*.csv
+!ai_model/dataset/.gitkeep
+
+# Streamlit temporary state
+.streamlit/
