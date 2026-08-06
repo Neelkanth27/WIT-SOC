@@ -19,3 +19,5 @@ ai_model/dataset/*.csv
 
 *.db
 soc_audit.db
+
+endpoint/Target_Desktop/
