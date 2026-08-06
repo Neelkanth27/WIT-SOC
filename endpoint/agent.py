@@ -3,6 +3,7 @@ import time
 import random
 import socket
 import os
+import sys
 import threading
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -61,7 +62,7 @@ def start_folder_monitor():
     observer.start()
 
 # =====================================================================
-# 4. TELEMETRY GENERATION ENGINE
+# 4. TELEMETRY GENERATION & TRANSMISSION
 # =====================================================================
 def generate_normal_traffic():
     return {
@@ -81,10 +82,44 @@ def generate_malicious_traffic():
         "fwd_packet_length_mean": random.uniform(800.0, 1500.0)
     }
 
+def send_telemetry(payload, target_url):
+    """Sends the data and executes the Software Cut if RED is received."""
+    try:
+        response = requests.post(target_url, json=payload, timeout=2)
+        if response.status_code == 200:
+            data = response.json()
+            verdict = data.get('action', 'ALLOW')
+            signal = data.get('hardware_signal', 'GREEN')
+            score = data.get('threat_score_percentage', 0.0)
+            
+            print(f"    └─ SOC Verdict: {verdict} | Signal: {signal} | Score: {score}%")
+
+            # --- THE SOFTWARE CUT INITIATION ---
+            if verdict == "PERM_LOCK":
+                print("\n[!!!] CRITICAL THREAT DETECTED BY EDGE SOC.")
+                print("[!!!] INITIATING OS-LEVEL NETWORK ISOLATION...")
+                time.sleep(1) 
+                
+                # Phase 1: The "Simulated" Cut (Safe for Lab PCs)
+                print("\n==============================================")
+                print("      [SYSTEM OFFLINE - ADAPTER SEVERED]      ")
+                print("==============================================")
+                
+                # Phase 2: The "Real" Cut 
+                # os.system('netsh interface set interface "Wi-Fi" disable')
+                
+                print("[*] Agent halting to prevent lateral movement.")
+                sys.exit(0) # Kills the agent instantly
+
+        else:
+            print(f"    └─ [ERROR] Status: {response.status_code}")
+    except requests.exceptions.RequestException:
+        print("    └─ [NETWORK ERROR] Connection to SOC lost.")
+
 # =====================================================================
 # 5. MAIN EXECUTION LOOP
 # =====================================================================
-def stream_telemetry():
+def run_agent():
     print("=" * 60)
     print(f"[*] WIT-SOC Endpoint Agent")
     print(f"[*] Machine ID: {MACHINE_ID}")
@@ -101,19 +136,11 @@ def stream_telemetry():
     try:
         while True:
             payload = generate_malicious_traffic() if ATTACK_MODE else generate_normal_traffic()
-            
             status_msg = "[!] FIRING MALICIOUS PAYLOAD" if ATTACK_MODE else "[+] Streaming normal telemetry"
             print(f"{status_msg} -> {SOC_URL}")
 
-            try:
-                response = requests.post(SOC_URL, json=payload, timeout=2)
-                if response.status_code == 200:
-                    v = response.json()
-                    print(f"    └─ SOC Verdict: {v['action']} | Signal: {v['hardware_signal']} | Score: {v['threat_score_percentage']}%\n")
-                else:
-                    print(f"    └─ [ERROR] Status: {response.status_code}\n")
-            except requests.exceptions.RequestException:
-                print("    └─ [NETWORK ERROR] Connection to SOC lost.\n")
+            # Call our newly named function!
+            send_telemetry(payload, SOC_URL)
 
             time.sleep(2)
             
@@ -121,4 +148,4 @@ def stream_telemetry():
         print("\n[*] Agent stopped by user.")
 
 if __name__ == "__main__":
-    stream_telemetry()
+    run_agent()
