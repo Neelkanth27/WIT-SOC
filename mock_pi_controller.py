@@ -14,27 +14,27 @@ SIGNAL_VISUALS = {
     "RED":    "⚪ [GREEN LED: OFF]  🟡 [YELLOW LED: OFF]  🔴 [RED LED: ON ]"
 }
 
-
 def configure_soc_server():
     """Prompts the user for the backend IP during demo setup."""
     global BACKEND_URL
     print("[?] Enter the Backend Server IP (e.g., 10.45.2.100) or press Enter for localhost:")
     server_ip = input("> ").strip()
+    
     if not server_ip:
         server_ip = "127.0.0.1"
+        
     BACKEND_URL = f"http://{server_ip}:8000/api/v1/status"
     print(f"[+] Server URL configured as: {BACKEND_URL}")
-
 
 def update_mock_led_state(signal: str):
     """Simulates physical LED state changes on terminal screen."""
     signal = str(signal).upper().strip()
+    
     visual = SIGNAL_VISUALS.get(signal)
     if visual:
         print(f"\r[STATUS: {signal:6s}] {visual}", end="", flush=True)
     else:
         print(f"\r[STATUS: UNKNOWN] ⚪ [GREEN LED: OFF]  🟡 [YELLOW LED: OFF]  🔴 [RED LED: OFF]", end="", flush=True)
-
 
 def main():
     print("=" * 70)
@@ -65,7 +65,6 @@ def main():
 
     except KeyboardInterrupt:
         print("\n\n[INFO] Simulation stopped cleanly.")
-
 
 if __name__ == "__main__":
     main()
