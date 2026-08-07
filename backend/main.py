@@ -6,8 +6,6 @@ import pandas as pd
 import numpy as np
 import os
 import sqlite3
-import socket
-import threading
 import time
 from datetime import datetime
 
@@ -20,7 +18,6 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# Enable CORS so Teammate 2's frontend can fetch data without browser blocks
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -54,7 +51,6 @@ def init_db():
 
 init_db()
 
-# Global state to keep track of the latest status for instant hardware polling
 latest_status = {
     "hardware_signal": "GREEN",
     "action": "ALLOW",
@@ -62,35 +58,10 @@ latest_status = {
     "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 }
 
-# Alias for hardware status route consistency
 global_hardware_state = latest_status
 
 # =====================================================================
-# 3. DYNAMIC UDP AUTO-DISCOVERY BEACON (Zero-Config Network Discovery)
-# =====================================================================
-UDP_PORT = 9999
-BEACON_MESSAGE = b"WIT_SOC_SERVER_BEACON"
-
-def udp_beacon_thread():
-    """Silently broadcasts a UDP beacon so agents auto-discover this server IP."""
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    sock.settimeout(0.2)
-    
-    print(f"[*] UDP Auto-Discovery Beacon started on port {UDP_PORT}...")
-    while True:
-        try:
-            sock.sendto(BEACON_MESSAGE, ('<broadcast>', UDP_PORT))
-        except Exception as e:
-            pass
-        time.sleep(2)  # Broadcast every 2 seconds
-
-# Start the UDP beacon in a background thread
-beacon_thread = threading.Thread(target=udp_beacon_thread, daemon=True)
-beacon_thread.start()
-
-# =====================================================================
-# 4. LOAD AI MODEL ENGINE
+# 3. LOAD AI MODEL ENGINE
 # =====================================================================
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "ai_model", "saved_model.pkl")
@@ -105,7 +76,7 @@ except Exception as e:
     model = None
 
 # =====================================================================
-# 5. DATA SCHEMAS
+# 4. DATA SCHEMAS
 # =====================================================================
 class TelemetryPayload(BaseModel):
     flow_duration: float
@@ -115,7 +86,7 @@ class TelemetryPayload(BaseModel):
     fwd_packet_length_mean: float
 
 # =====================================================================
-# 6. CORE TELEMETRY INGESTION & HYBRID ENGINE
+# 5. CORE TELEMETRY INGESTION & HYBRID ENGINE
 # =====================================================================
 @app.post("/api/v1/telemetry")
 def analyze_telemetry(data: TelemetryPayload):
@@ -126,8 +97,6 @@ def analyze_telemetry(data: TelemetryPayload):
     detection_engine = "AI Engine"
 
     # --- LAYER 1: HEURISTIC ENGINE (Fast-Path Signatures) ---
-    
-    # Signature 1: Volumetric DDoS (Massive forward flood, no backward response)
     if data.total_bwd_packets == 0 and data.total_fwd_packets > 1000:
         score_percent = 99.9
         action = "PERM_LOCK"
@@ -135,7 +104,6 @@ def analyze_telemetry(data: TelemetryPayload):
         detection_engine = "Heuristic: Volumetric DDoS"
         print(f"[!] HYBRID TRIGGER: Volumetric DDoS Intercepted!")
 
-    # Signature 2: Stealth Port Scan (Single packet, ultra-fast connection attempt)
     elif data.flow_duration < 20.0 and data.total_fwd_packets == 1 and data.total_bwd_packets == 0:
         score_percent = 95.0
         action = "PERM_LOCK"
@@ -143,7 +111,6 @@ def analyze_telemetry(data: TelemetryPayload):
         detection_engine = "Heuristic: Stealth Port Scan"
         print(f"[!] HYBRID TRIGGER: Stealth Port Scan Intercepted!")
 
-    # Signature 3: Data Exfiltration (Massive abnormal outbound packet size)
     elif data.fwd_packet_length_mean > 5000.0:
         score_percent = 98.0
         action = "PERM_LOCK"
@@ -210,8 +177,7 @@ def analyze_telemetry(data: TelemetryPayload):
     try:
         conn = sqlite3.connect(DB_FILE, timeout=10)
         cursor = conn.cursor()
-        
-        # Schema migration check
+
         cursor.execute("PRAGMA table_info(telemetry_logs)")
         columns = [column[1] for column in cursor.fetchall()]
         if 'detection_engine' not in columns:
@@ -234,14 +200,14 @@ def analyze_telemetry(data: TelemetryPayload):
     }
 
 # =====================================================================
-# 7. TEAMMATES API ENDPOINTS (Frontend Dashboard & Raspberry Pi)
+# 6. TEAMMATES API ENDPOINTS (Frontend Dashboard & Raspberry Pi)
 # =====================================================================
 @app.get("/api/v1/logs")
 def get_audit_logs(limit: int = 20):
     """API for Teammate 2 (Dashboard): Fetches recent SIEM logs for UI tables/charts."""
     try:
         conn = sqlite3.connect(DB_FILE, timeout=10)
-        conn.row_factory = sqlite3.Row  # Returns rows as key-value dicts
+        conn.row_factory = sqlite3.Row  
         cursor = conn.cursor()
         cursor.execute('''
             SELECT id, timestamp, flow_duration, flow_bytes_sec, threat_score, action_taken, hardware_signal, detection_engine 
@@ -259,7 +225,6 @@ def get_audit_logs(limit: int = 20):
 def get_hardware_status():
     """API for Teammate 3 (Raspberry Pi) & Dashboard Header: Returns live signal state."""
     return latest_status
-
 
 if __name__ == "__main__":
     import uvicorn
