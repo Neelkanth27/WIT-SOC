@@ -62,6 +62,9 @@ latest_status = {
     "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 }
 
+# Alias for hardware status route consistency
+global_hardware_state = latest_status
+
 # =====================================================================
 # 3. DYNAMIC UDP AUTO-DISCOVERY BEACON (Zero-Config Network Discovery)
 # =====================================================================
@@ -256,3 +259,8 @@ def get_audit_logs(limit: int = 20):
 def get_hardware_status():
     """API for Teammate 3 (Raspberry Pi) & Dashboard Header: Returns live signal state."""
     return latest_status
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
