@@ -1,5 +1,7 @@
 # Edge SOC Hardware Mitigation Layer - LED Status Module
 
+> **Status:** Finalized & Verified for Edge SOC Capstone Project
+
 This module connects a Raspberry Pi hardware mitigation layer to the Edge SOC backend. It securely connects to the backend IP address and polls the `/api/v1/status` endpoint every 0.5 seconds to light up the corresponding physical LED (**GREEN**, **YELLOW**, or **RED**).
 
 ---
