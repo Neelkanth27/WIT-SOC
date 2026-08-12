@@ -69,7 +69,13 @@ def analyze_telemetry(data: TelemetryPayload):
         payload_dict = {"flow_duration": data.flow_duration, "flow_bytes_sec": data.flow_bytes_sec, 
                         "total_fwd_packets": data.total_fwd_packets, "total_bwd_packets": data.total_bwd_packets, "fwd_packet_length_mean": data.fwd_packet_length_mean}
         features_df = pd.DataFrame([list(model.feature_names_in_)], columns=list(model.feature_names_in_)) if hasattr(model, "feature_names_in_") else pd.DataFrame([payload_dict])
-        features_df.iloc[0] = [data.flow_duration, data.flow_bytes_sec, data.total_fwd_packets, data.total_bwd_packets, data.fwd_packet_length_mean]
+        features_df = pd.DataFrame([[
+        float(data.flow_duration), 
+        float(data.flow_bytes_sec), 
+        float(data.total_fwd_packets), 
+        float(data.total_bwd_packets), 
+        float(data.fwd_packet_length_mean)
+    ]])
         
         probabilities = model.predict_proba(features_df)[0]
         classes = list(model.classes_)
