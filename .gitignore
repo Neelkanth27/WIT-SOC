@@ -5,3 +5,5 @@ __pycache__/
 env/
 *.db
 soc_audit.db
+venv/
+*.csv
