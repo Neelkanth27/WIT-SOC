@@ -49,7 +49,8 @@ def main():
                 res = requests.post(target_url, json=payload.model_dump() if hasattr(payload, "model_dump") else payload.dict(), timeout=3.0)
                 if res.status_code == 200:
                     data = res.json()
-                    verdict, score = data.get("action", "ALLOW"), data.get("threat_score_percentage", 0.0)
+                    verdict = data.get("action", "ALLOW")
+                    score = data.get("threat_score", data.get("threat_score_percentage", 0.0))
                     if verdict == "PERM_LOCK":
                         print(f"\n{BG_RED} 🚨 CRITICAL THREAT DETECTED: PERM_LOCK ISSUED 🚨 {CLR_RESET}")
                         print(f"{CLR_RED}[!] Threat Score: {score}% | Hardware Signal: RED\n[!] WORKSTATION NETWORK INTERFACE ISOLATED BY EDGE SOC.\n[*] Execution halted. Threat neutralized.{CLR_RESET}\n")
