@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import subprocess
 
 def setup():
     print("=========================================")
@@ -20,10 +21,9 @@ def setup():
     print("\n[!] Launching background services...\n")
     time.sleep(1)
     
-    # Executes the Trojan simulator in ATTACK mode
+    # Executes the Trojan simulator in ATTACK mode safely with subprocess
     sim_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "telemetry_simulator.py")
-    cmd = f'"{sys.executable}" "{sim_script}" --attack'
-    os.system(cmd)
+    subprocess.run([sys.executable, sim_script, "--attack"])
 
 if __name__ == "__main__":
     setup()
