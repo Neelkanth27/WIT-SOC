@@ -7,3 +7,4 @@ env/
 soc_audit.db
 venv/
 *.csv
+*.html
