@@ -21,10 +21,9 @@ def setup():
     time.sleep(1)
     
     # Executes the Trojan simulator in ATTACK mode
-    if sys.platform == "win32":
-        os.system("python telemetry_simulator.py --attack")
-    else:
-        os.system("python3 telemetry_simulator.py --attack")
+    sim_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "telemetry_simulator.py")
+    cmd = f'"{sys.executable}" "{sim_script}" --attack'
+    os.system(cmd)
 
 if __name__ == "__main__":
     setup()

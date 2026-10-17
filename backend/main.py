@@ -1,9 +1,16 @@
+import sys
+import os
+from datetime import datetime
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import pandas as pd
-import os
-from datetime import datetime
+
+# Ensure backend directory is in sys.path regardless of execution working directory
+BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+if BACKEND_DIR not in sys.path:
+    sys.path.insert(0, BACKEND_DIR)
+
 from database import init_db, log_event, get_recent_logs, get_audit_stats, clear_audit_logs
 
 app = FastAPI(title="Edge SOC Gateway - Autonomous AI Wire-Interposition Trust Layer")

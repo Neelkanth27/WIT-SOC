@@ -3,14 +3,39 @@ import socket
 import requests
 from gpiozero import LED
 
+import sys
+
 # --- GPIO Setup (BCM Pin Numbers) ---
 green_led = LED(22)
 yellow_led = LED(27)
 red_led = LED(17)
 
-# Gateway endpoint hosted on PC 1
-GATEWAY_URL = "http://192.168.137.1:8000/api/v1/status"
+GATEWAY_URL = None
 UDP_PORT = 9999
+
+def configure_soc_server():
+    """Configures the backend IP via CLI arguments or interactive prompt."""
+    global GATEWAY_URL
+    server_ip = None
+    if len(sys.argv) > 1 and not sys.argv[1].startswith("-"):
+        server_ip = sys.argv[1].strip()
+    elif "--server-ip" in sys.argv:
+        idx = sys.argv.index("--server-ip")
+        if idx + 1 < len(sys.argv):
+            server_ip = sys.argv[idx + 1].strip()
+            
+    if not server_ip:
+        print("[?] Enter Backend Server IP (or press Enter for 192.168.137.1):")
+        try:
+            server_ip = input("> ").strip()
+        except Exception:
+            server_ip = ""
+            
+    if not server_ip:
+        server_ip = "192.168.137.1"
+        
+    GATEWAY_URL = f"http://{server_ip}:8000/api/v1/status"
+    print(f"[+] Gateway target URL configured as: {GATEWAY_URL}")
 
 def set_leds(green=False, yellow=False, red=False):
     """Controls physical GPIO pin states on the breadboard."""
@@ -28,7 +53,10 @@ def run_controller():
     Polls the Edge SOC Gateway, actuates physical LEDs, 
     and sends targeted UDP kill packets to isolated attacker IPs.
     """
-    print("[*] Raspberry Pi Out-of-Band Hardware Controller Started...")
+    print("=" * 65)
+    print("  Raspberry Pi Out-of-Band Hardware Mitigation Controller")
+    print("=" * 65)
+    configure_soc_server()
     set_leds(green=True)
     isolated_nodes = set()
 
